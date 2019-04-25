@@ -1,0 +1,72 @@
+import json
+import sys
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from perevod import *
+
+from difflib import get_close_matches
+
+
+class MyWin(QtWidgets.QMainWindow):
+
+    def __init__(self, parent=None):
+        QtWidgets.QWidget.__init__(self, parent)
+
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
+
+        self.ui.btnResult.clicked.connect(self.getResult)
+
+    def getResult(self):
+        n1 = self.ui.txtNum1.toPlainText()
+
+        output = retrive_definition(n1)
+
+        if type(output) == list:
+            for item in output:
+                print("-item",item)
+                out = item
+        else:
+            print("-output",output)
+            out = output
+
+        self.ui.lblSum.setPlainText(out)
+
+    def mbox(self, body, title='Error'):
+        dialog = QMessageBox(QMessageBox.Information, title, body)
+        dialog.exec_()
+
+# -------------------------------------------------------------------
+
+data = json.load(open("data.json"))
+
+def retrive_definition(word):
+    word = word.lower()
+
+    if word in data:
+        return data[word]
+    elif word.title() in data:
+        return data[word.title()]
+    elif word.upper() in data:
+        return data[word.upper()]
+    elif len(get_close_matches(word, data.keys())) > 0:
+        action = input("Может быть Вы имели в виду %s ? [да или нет]: " % get_close_matches(word, data.keys())[0])
+        if action == "да":
+            return data[get_close_matches(word, data.keys())[0]]
+        elif action == "Да":
+            return data[get_close_matches(word, data.keys())[0]]
+        elif action == "Нет":
+            return "Слово пока не существует в словаре."
+        elif action == "нет":
+            return "Слово пока не существует в словаре."
+        else:
+            return "Я не понимаю вашу запись. Извините."
+
+
+if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
+    myapp = MyWin()
+    myapp.show()
+    sys.exit(app.exec_())
